@@ -66,7 +66,11 @@ partialN <- function(p00.st.tp){
 ht.estimates <- function(ch.dataset, p.equation=TRUE, model = "Mt", timepoints = 20)
   # Fits inla model to capture history data and return N
   # formula includes id, alt.id, weight.s, alt.id2, sex.new, station.i, timepoint.i
-  # requires functions makedf and 
+  #
+  # allows two ways of computing probabilies
+  # one through computing gammas described in paper (p.equation=TRUE)
+  # another solving the equation system using the estimates of the conditional capture history probabilities (p.equation=FALSE)
+  #
 {
   #formula for inla model
   formula <- 
@@ -149,7 +153,7 @@ fit.inla.ar <- function(tsdata = NA)
   return (modi)
   
 }
-# timeseries <- checksig
+
 fit.ar <- function(timeseries, trueN=FALSE, truelog=FALSE)
   # receives timeseries dataframe and uses fit.inla.ar function, to retrieve a row containing all necessary information
 {
@@ -181,7 +185,6 @@ fit.ar <- function(timeseries, trueN=FALSE, truelog=FALSE)
   
 }
 
-#this function has been tested
 ar2.poisson.rate <- function(countdf, Lhood = "poisson", trueN=FALSE) # "nbinomial"
   # receives count data.frame with count and timepoint and returns ar coefficients for poisson rate
   #an ar2 in a data.frame
@@ -195,7 +198,6 @@ ar2.poisson.rate <- function(countdf, Lhood = "poisson", trueN=FALSE) # "nbinomi
   #scale.model makes sure the smoothing doesnt depend on the length of the time series
   modpois <- inla(form.pois, family = Lhood, data = countdf, control.predictor = list(compute=T))
   
-  # print(summary(modpois))
   count.df <- data.frame(logcount=modpois$summary.linear.predictor$mean, timepoint=1:nrow(countdf))
 
   # fit ar model to poisson rate
@@ -238,6 +240,7 @@ vgam.fitted <- function(inla.dataset, model = "Mt")
 }
 
 vgam.ht <- function(vgam.fitted, timepoints = NA)
+  # uses HT estimator on VGAM estimated capture probabilities
 {
   totaldf <- vgam.fitted
   totaldf$p00.est <- (1-totaldf$p1)*(1-totaldf$p2)
@@ -252,9 +255,12 @@ vgam.ht <- function(vgam.fitted, timepoints = NA)
   
 }
 
+# computing AR period based on coefficients
 periodAR <- function(x1,x2) 2*pi/(acos(x1/(2*sqrt(-x2))))
 
 mean.na <- function(x) 
+  # mean function to use in apply() settings
+
 {
   m <- mean(x,na.rm = TRUE)
   return(m)
