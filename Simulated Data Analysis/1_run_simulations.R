@@ -1,21 +1,24 @@
-source("Simulated Data Analysis/0_3_functions_for_run_sims_inparallel.R")
+### 
 
-#### run in parallel function ####
-#setup parallel backend to use many processors
+# source functions from all previous files
+source("~/AR2-Capture-Heterogeneity-Simulation/Simulated Data Analysis/0_3_functions_for_run_sims_inparallel.R")
+
 library(doRNG)
 library(doParallel)
 
 loopparal <- function(sims=5,params = c(-1,-.5,0.08),ar_scale=20,
                       mn = 30, wsd=8,
                       p1=.55,p2=.75, md = "Mt", seed=123){
-  #runs in parallel the function sim_models and returns dataframe
+  # runs in parallel the function sim_models and returns dataframe
+  # be careful of the path inside the finalMatrix function (it needs to be complete
+  #
   start_time <- Sys.time()
   cores=detectCores()
   cl <- makeCluster(cores[1]-1) #not to overload computer
   registerDoParallel(cl)
   finalMatrix <- foreach(i=1:sims, .combine=rbind,.options.RNG=seed) %dorng% { 
     # change path # needs to be full path
-    source("~/OneDrive - UiT Office 365/MusData/SCRIPT_FOR_PUBLICATION/Simulated Data Analysis/0_3_functions_for_run_sims_inparallel.R")
+    source("~/AR2-Capture-Heterogeneity-Simulation/Simulated Data Analysis/0_3_functions_for_run_sims_inparallel.R")
     tempMatrix = sim_models(realparams = params, p.d1=p1,p.d2=p2,
                             w.avg.mn=mn,w.avg.sd = wsd, mod=md) #calling a function
     tempMatrix #Equivalent to finalMatrix = cbind(finalMatrix, tempMatrix)
@@ -28,15 +31,7 @@ loopparal <- function(sims=5,params = c(-1,-.5,0.08),ar_scale=20,
   return(finalMatrix)
 }
 
-try1 <- loopparal(sims=7,params = c(-1,-.5,1),ar_scale=20,
-          mn = 30, wsd=8,
-          p1=.55,p2=.75, md = "Mt", seed=123)
-
-##### RUN SIMULATIONS IN PARALEL #####
-#### run simulations ####
-# simloop <- function(phi1=c(-1,-.5,0,.5,1),phi2=c(-.2,-.5,-.8),vars=c(.08,0.2),
-#                     pd1 = .55, pd2=.75, mod = "Mt", tsleng = 20, sims = 100,
-#                     w.avg.sd=5,inn.sd=1.2,w.avg.mn=30, ar.scale=20){
+##### RUN FULL SET SIMULATIONS IN PARALEL #####
 sims=200
 phi1=c(-1,-.5,0,.5,1)
 phi2=c(-.2,-.5,-.8)
@@ -67,15 +62,15 @@ sim_var <- list()
       }
   end_time <- Sys.time()
   print(paste0("Total running time ",end_time - start_time))
+#### END OF SIMULATION RUNNING #####
 
-proclist <- summze(sim_var)
-check1 <- proclist
-str(sim_var)
+
 #### summarize simulations function ####
 Bias.2 <- function(est,true) return((as.numeric(est) - true)^2)
 true.var <- function(phi1,phi2,inn.var) return(((1-phi2)/(1+phi2))*((inn.var/((1-phi2)^2-phi1^2))))
 
 summze <- function(simloops)
+  # function to summarize the observations
 {
   for(s in 1:length(simloops))
   {
@@ -117,10 +112,3 @@ summze <- function(simloops)
   }
   return(fset)
 }
-check1 <- summze(sim_var)
-
-v04 <- filter(check1,inn.var==.64&method>=5)[,c(1,2,10:15,16:19,21)]
-summary(v04)
-1.18+2.3+2.4+3+2+2.1+2+1.6+1.8+1.76+1.9+1.78+1.54+1.51+1.4+1.23
-30*5*2
-300/24
