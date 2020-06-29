@@ -1,14 +1,11 @@
-### FUNCTIONS TO FIT MODELS IN BIG SIMULATION SETUP ###
+### FUNCTIONS TO FIT MODELS IN SIMULATION SETUP ###
 require(dplyr)
 require(INLA)
 require(VGAM)
 
 logna <- function(x) ifelse(x==0,0,log(x))
 
-# PROBABILITY OF CAPTURE
-prob.comp <- function(gama1,gama2,weight) (exp((gama1-gama2)*weight))
-
-# Standardize inla fitted set
+# Standardize inla fitted values to add up to one
 stdize <- function(matrix){
   #set counter
   fit2 <- matrix
@@ -24,6 +21,7 @@ stdize <- function(matrix){
 }
 
 # Transform triplet sequence into data frame with 3 columns
+# creates data frame from sequence of probability values
 makedf <- function(df){
   for(i in seq(1,length(df),3))
   {
@@ -61,6 +59,9 @@ partialN <- function(p00.st.tp){
   
   return(newdata)
 }
+
+# Computes capture probability using weight as a single covariate and gammas (see paper for definition)
+prob.comp <- function(gama1,gama2,weight) (exp((gama1-gama2)*weight))
 
 ht.estimates <- function(ch.dataset, p.equation=TRUE, model = "Mt", timepoints = 20)
   # Fits inla model to capture history data and return N
