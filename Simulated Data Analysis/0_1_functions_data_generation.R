@@ -11,7 +11,7 @@ true.var <- function(phi1,phi2,inn.var) return(
 theoreticalK <- function(N, phi1,phi2,inn.var) return(log(N)-1/2*true.var(phi1,phi2,inn.var))
 # log K = log N - 1/2 * sigma^2
 
-sig.ch <- function(timepoints = 20, params_ar = c(.5,-.5,.04), ar.scale=NA, p.d1=.55,p.d2=.75,
+gen.ch <- function(timepoints = 20, params_ar = c(.5,-.5,.04), ar.scale=NA, p.d1=.55,p.d2=.75,
                    w.avg.mn = 15, w.avg.sd =5, model = "Mt", inn.sd = 1.1)
   # returns simulated dataset with parameters defined above where
   # timepoints = length of time series
@@ -115,7 +115,7 @@ generate.cr.data <- function(timepoints = 20, params_ar = c(.5,-.5,.08),
   # and count dataset associated with it
 { #
   #create N's for different timepoints and locations
-  crdatalist <- sig.ch(timepoints=timepoints, params_ar=params_ar, ar.scale=ar.scale,w.avg.mn = w.avg.mn, w.avg.sd = w.avg.sd,
+  crdatalist <- gen.ch(timepoints=timepoints, params_ar=params_ar, ar.scale=ar.scale,w.avg.mn = w.avg.mn, w.avg.sd = w.avg.sd,
                    inn.sd = inn.sd, model = model, p.d1=p.d1,p.d2=p.d2)
   crdata=crdatalist[[1]]
   truenumbers=crdatalist[[2]]
@@ -139,12 +139,14 @@ generate.cr.data <- function(timepoints = 20, params_ar = c(.5,-.5,.08),
     crdata2 <- crdata_nozeros
     ## obtain capture history variable
     ### TRANSFORM DATASET FOR INLA ###
+    # By using the Multinomial to Poisson transformation, it is required that every non observed category is added on to the dataset
+    # Therefore we need to repeat every observation and replace the true capture history with the non-observed ones
     ## add count variable
     crdata2$count <- 1
     crdata2$id <- 1:nrow(crdata2)
     ## copy dataset
     crdata3 <- crdata2
-    ## add count 0
+    ## add count 0 - meaning this category was not observed
     crdata3$count <- 0
     ## copy again
     crdata4 <- crdata3
